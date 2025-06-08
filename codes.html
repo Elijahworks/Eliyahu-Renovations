@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="he">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>קוד גישה</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            direction: rtl;
+            padding: 30px;
+            background-color: #f9f9f9;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: block;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        input {
+            padding: 10px 40px 10px 10px;
+            font-size: 18px;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #aaa;
+            box-sizing: border-box;
+            direction: rtl;
+            text-align: right;
+            background: white;
+        }
+
+        .toggle-visibility {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-125%);
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            outline: none;
+        }
+
+        .toggle-visibility:active {
+            color: #000;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .banner {
+            margin-top: 20px;
+            background-color: #cc4848;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            animation: flash 0.4s ease-in-out alternate infinite;
+            display: inline-block;
+        }
+
+        .banner.hidden {
+            display: none;
+        }
+
+        @keyframes flash {
+            0% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.4;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h2>הזן קוד גישה</h2>
+
+    <div class="input-wrapper">
+        <input type="password" id="accessCode" placeholder="הכנס קוד" />
+        <button type="button" class="toggle-visibility" tabindex="-1" aria-label="הצג/הסתר קוד"
+            onclick="togglePasswordVisibility()">👁️</button>
+    </div>
+
+    <button id="submitBtn">אישור</button>
+    <div id="banner" class="banner hidden"></div>
+
+    <script>
+        const SUPABASE_URL = "https://ptwlvrtzjwsvzrbuepvs.supabase.co";
+        const SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0d2x2cnR6andzdnpyYnVlcHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzMzAyMjIsImV4cCI6MjA2NDkwNjIyMn0.R7ITezkrnw5wD3ab_sQ6idXX1e7Cn-0_SFFAlVX2BC0";
+        const USER_ID = "5fcb76f5-bce1-4e33-b1b9-63fa6c51cb3e";
+        const MAX_ATTEMPTS = 20;
+        const CODE = "alio123alio123A1";
+        const ATTEMPTS_KEY = "codes_attempts";
+
+        const banner = document.getElementById("banner");
+
+        function showBanner(message, duration = 3000) {
+            banner.textContent = message;
+            banner.classList.remove("hidden");
+            clearTimeout(banner._timeout);
+            banner._timeout = setTimeout(() => {
+                banner.classList.add("hidden");
+            }, duration);
+        }
+
+        async function lockAccount() {
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/security_state?user_id=eq.${USER_ID}`, {
+                    method: "PATCH",
+                    headers: {
+                        "apikey": SUPABASE_API_KEY,
+                        "Authorization": `Bearer ${SUPABASE_API_KEY}`,
+                        "Content-Type": "application/json",
+                        "Prefer": "return=minimal"
+                    },
+                    body: JSON.stringify({ locked: true })
+                });
+            } catch (err) {
+                console.error("שגיאה בנעילה:", err);
+            }
+        }
+
+        document.getElementById("submitBtn").addEventListener("click", async () => {
+            const input = document.getElementById("accessCode").value.trim();
+            let attempts = parseInt(localStorage.getItem(ATTEMPTS_KEY) || "0");
+
+            if (input === CODE) {
+                localStorage.setItem(ATTEMPTS_KEY, "0");
+                window.location.href = "home.html";
+            } else {
+                attempts++;
+                localStorage.setItem(ATTEMPTS_KEY, attempts);
+                if (attempts >= MAX_ATTEMPTS) {
+                    await lockAccount();
+                    showBanner("האתר ננעל. יש לשחרר דרך Supabase.");
+                } else {
+                    showBanner(`קוד שגוי. ניסיון ${attempts} מתוך ${MAX_ATTEMPTS}`);
+                }
+            }
+        });
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('accessCode');
+            const btn = document.querySelector('.toggle-visibility');
+            if (input.type === "password") {
+                input.type = "text";
+                btn.textContent = "🙈";
+            } else {
+                input.type = "password";
+                btn.textContent = "👁️";
+            }
+            input.focus();
+        }
+    </script>
+</body>
+
+</html>
