@@ -19,21 +19,68 @@
             <input type="text" id="projectSearch" class="search-bar" placeholder="חפש פרויקט...">
         </div>
         <div style="text-align: center; margin-top: 20px;">
+            <div style="font-size: larger; font-weight: bolder;">קוד כניסה לאורחים באתר </div>
             <button id="copyCodeBtn"
                 style="font-size: 1.1em; padding: 10px 20px; border-radius: 12px; background: #e0e0e0; border: none; cursor: pointer;">
-                📋 העתק קוד לאתר: A1@k8z
+                📋 העתק קוד: A1@k8z
             </button>
         </div>
     </header>
 
 
-    <main id="projectsContainer">
-        <!-- כרטיסי פרויקטים ייכנסו כאן -->
+    <main>
+        <!-- תיבת התראות -->
+        <div id="notificationBox" class="notification-box"></div>
+
+        <!-- כפתור + תיבת הוספת התראה -->
+        <div class="notification-input-wrapper">
+            <button id="toggleNotificationInput" class="toggle-btn">➕ הוסף התראה</button>
+            <div id="notificationInputArea" class="hidden">
+                <input type="text" id="notificationText" placeholder="כתוב כאן את ההתראה...">
+                <button onclick="submitNotification()">📢 שלח</button>
+            </div>
+        </div>
+
+        <!-- אזור הפרויקטים בלבד -->
+        <div id="projectsContainer"></div>
     </main>
+
 
     <div class="pagination" id="pagination"></div>
 
-    <script>
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        const supabase = createClient('https://emaxgeigsgvusswhwjtr.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtYXhnZWlnc2d2dXNzd2h3anRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MjY4MTAsImV4cCI6MjA2NTAwMjgxMH0.YysDKHpjuxq9yZ6S6eIN4wR6r0S2jmkdICARMzx6WRM'); // אותו מפתח מ-sors.html
+
+        async function loadProjects() {
+            const { data, error } = await supabase
+                .from("projects")
+                .select("*")
+                .order("id", { ascending: false });
+
+            if (error) {
+                console.error("שגיאה בשליפה מ-Supabase:", error.message);
+                return;
+            }
+
+            const container = document.getElementById("projectsContainer");
+            container.innerHTML = ""; // איפוס
+
+            data.forEach(project => {
+                const card = document.createElement("div");
+                card.className = "project-card";
+                card.innerHTML = `
+        <h3>${project.projectName || "ללא שם"}</h3>
+        <p>${project.description || "אין תיאור"}</p>
+        <p><strong>סטטוס:</strong> ${project.status || "לא ידוע"}</p>
+        <p><strong>עיר:</strong> ${project.city || "-"}</p>
+      `;
+                container.appendChild(card);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", loadProjects);
+
         const PROJECTS_PER_PAGE = 10;
         const fallbackImage = 'fallback.png'; // תמונה קבועה מקומית למקרה שאין תמונות
 
@@ -96,7 +143,7 @@
 
         function copySecretCode() {
             const button = document.getElementById("copyCodeBtn");
-            const code = "A1@k8z"; // קוד מקוצר
+            const code = "alio123alio123A1"; // קוד מקוצר
             navigator.clipboard.writeText(code).then(() => {
                 const originalColor = button.style.background;
                 button.style.background = "#a0e0a0"; // ירוק זמני
@@ -107,6 +154,34 @@
         }
 
         document.getElementById("copyCodeBtn").addEventListener("click", copySecretCode);
+        function showNotification(message, duration = 5000) {
+            const box = document.getElementById("notificationBox");
+            const note = document.createElement("div");
+            note.className = "notification";
+            note.textContent = message;
+
+            box.prepend(note);
+
+            setTimeout(() => {
+                note.style.opacity = "0";
+                setTimeout(() => note.remove(), 500);
+            }, duration);
+        }
+
+        // הצגת תיבת הזנה
+        document.getElementById("toggleNotificationInput").addEventListener("click", () => {
+            const inputArea = document.getElementById("notificationInputArea");
+            inputArea.classList.toggle("hidden");
+        });
+
+        function submitNotification() {
+            const input = document.getElementById("notificationText");
+            const message = input.value.trim();
+            if (message) {
+                showNotification(message);
+                input.value = "";
+            }
+        }
     </script>
 </body>
 
