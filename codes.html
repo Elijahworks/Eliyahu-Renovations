@@ -104,14 +104,38 @@
     <div id="banner" class="banner hidden"></div>
 
     <script>
-        const SUPABASE_URL = "https://ptwlvrtzjwsvzrbuepvs.supabase.co";
-        const SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0d2x2cnR6andzdnpyYnVlcHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzMzAyMjIsImV4cCI6MjA2NDkwNjIyMn0.R7ITezkrnw5wD3ab_sQ6idXX1e7Cn-0_SFFAlVX2BC0";
-        const USER_ID = "5fcb76f5-bce1-4e33-b1b9-63fa6c51cb3e";
-        const MAX_ATTEMPTS = 20;
         const CODE = "alio123alio123A1";
-        const ATTEMPTS_KEY = "codes_attempts";
 
+        const accessCodeInput = document.getElementById("accessCode");
+        const submitButton = document.getElementById("submitBtn");
         const banner = document.getElementById("banner");
+
+        function submitCode() {
+            const input = accessCodeInput.value.trim();
+            if (input === CODE) {
+                localStorage.setItem("codes_attempts", "0");
+                window.location.href = "home.html";
+            } else {
+                showBanner("קוד שגוי. נסה שוב.");
+            }
+        }
+
+        submitButton.addEventListener("click", submitCode);
+
+        // ⌨️ כניסה עם אנטר
+        accessCodeInput.addEventListener("keyup", (e) => {
+            if (e.key === "Enter" || e.keyCode === 13) {
+                submitCode();
+            }
+        });
+
+        // 🧱 הגבלת אורך ההזנה
+        accessCodeInput.addEventListener("input", () => {
+            const MAX_LENGTH = CODE.length;
+            if (accessCodeInput.value.length > MAX_LENGTH) {
+                accessCodeInput.value = accessCodeInput.value.slice(0, MAX_LENGTH);
+            }
+        });
 
         function showBanner(message, duration = 3000) {
             banner.textContent = message;
@@ -122,44 +146,8 @@
             }, duration);
         }
 
-        async function lockAccount() {
-            try {
-                await fetch(`${SUPABASE_URL}/rest/v1/security_state?user_id=eq.${USER_ID}`, {
-                    method: "PATCH",
-                    headers: {
-                        "apikey": SUPABASE_API_KEY,
-                        "Authorization": `Bearer ${SUPABASE_API_KEY}`,
-                        "Content-Type": "application/json",
-                        "Prefer": "return=minimal"
-                    },
-                    body: JSON.stringify({ locked: true })
-                });
-            } catch (err) {
-                console.error("שגיאה בנעילה:", err);
-            }
-        }
-
-        document.getElementById("submitBtn").addEventListener("click", async () => {
-            const input = document.getElementById("accessCode").value.trim();
-            let attempts = parseInt(localStorage.getItem(ATTEMPTS_KEY) || "0");
-
-            if (input === CODE) {
-                localStorage.setItem(ATTEMPTS_KEY, "0");
-                window.location.href = "home.html";
-            } else {
-                attempts++;
-                localStorage.setItem(ATTEMPTS_KEY, attempts);
-                if (attempts >= MAX_ATTEMPTS) {
-                    await lockAccount();
-                    showBanner("האתר ננעל. יש לשחרר דרך Supabase.");
-                } else {
-                    showBanner(`קוד שגוי. ניסיון ${attempts} מתוך ${MAX_ATTEMPTS}`);
-                }
-            }
-        });
-
         function togglePasswordVisibility() {
-            const input = document.getElementById('accessCode');
+            const input = accessCodeInput;
             const btn = document.querySelector('.toggle-visibility');
             if (input.type === "password") {
                 input.type = "text";
@@ -171,6 +159,7 @@
             input.focus();
         }
     </script>
+
 </body>
 
 </html>
