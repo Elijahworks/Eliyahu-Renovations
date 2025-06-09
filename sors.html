@@ -4,26 +4,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>טופס יצירת קשר</title>
+    <title>יצירת פרויקט חדש</title>
     <link rel="stylesheet" href="style3.css">
 </head>
 
 <body>
-    <div class="form-container">
-        <h2>צור קשר</h2>
-        <form action="#" method="post">
-            <label for="name">שם:</label>
-            <input type="text" id="name" name="name" required>
-
-            <label for="email">אימייל:</label>
-            <input type="email" id="email" name="email" required>
-
-            <label for="message">הודעה:</label>
-            <textarea id="message" name="message" rows="4" required></textarea>
-
-            <button type="submit">שלח</button>
+    <div class="container">
+        <div class="header">
+            <button id="addElementBtn">+</button>
+        </div>
+        <form id="projectForm">
+            <!-- האלמנטים יתוספו כאן -->
         </form>
     </div>
+
+    <!-- תפריט הוספה -->
+    <div id="menu" class="hidden">
+        <h3>הוספת אלמנט</h3>
+        <button id="addCustomElementBtn" type="button">אלמנט חדש</button>
+        <hr>
+        <div id="presetElements"></div>
+    </div>
+
+    <!-- פופאפ לאלמנט חדש -->
+    <div id="customElementPopup" class="hidden">
+        <h3>צור אלמנט מותאם</h3>
+        <label>כותרת:</label>
+        <input type="text" id="customLabel"><br>
+        <label>צבע כותרת:</label>
+        <input type="color" id="customColor"><br>
+        <label>טקסט:</label>
+        <input type="text" id="customText"><br>
+        <button type="button" id="createCustomBtn">הוסף</button>
+        <button type="button" id="closePopupBtn">ביטול</button>
+    </div>
+    <div class="upload-panel">
+        <label for="fileUpload" class="upload-label">📁 העלאת קבצים / תמונות / סרטונים</label>
+        <input type="file" id="fileUpload" multiple accept="video/*,image/*,.pdf,.doc,.docx" hidden />
+    </div>
+    <div id="projectsContainer"></div>
+
+
+    <button id="saveBtn" class="submitBtn" type="button">שמור פרויקט</button>
+
+    <div id="popupOverlay" class="hidden"></div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+        const supabase = createClient(
+            'https://emaxgeigsgvusswhwjtr.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtYXhnZWlnc2d2dXNzd2h3anRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MjY4MTAsImV4cCI6MjA2NTAwMjgxMH0.YysDKHpjuxq9yZ6S6eIN4wR6r0S2jmkdICARMzx6WRM'
+        );
+
+        const elements = [
+            { label: "שם הפרויקט", type: "text", id: "projectName" },
+            { label: "קוד/מספר פרויקט", type: "text", id: "projectCode" },
+            { label: "תאריך התחלה", type: "date", id: "startDate" },
+            { label: "תאריך סיום משוער", type: "date", id: "endDate" },
+            { label: "כתובת הפרויקט", type: "text", id: "address" },
+            { label: "עיר", type: "text", id: "city" },
+            { label: "סטטוס פרויקט", type: "select", id: "status", options: ["בתכנון", "התחיל", "בתהליך", "מושהה", "הושלם"] },
+            { label: "סוג פרויקט", type: "select", id: "type", options: ["מגורים", "מסחרי", "תשתיות", "שיפוץ", "אחר"] },
+            { label: "שטח בניה (מ\"ר)", type: "number", id: "area" },
+            { label: "גובה בניין (מטר)", type: "number", id: "height" },
+            { label: "מספר קומות", type: "number", id: "floors" },
+            { label: "תקציב (₪)", type: "number", id: "budget" },
+            { label: "פירוט כללי / תיאור הפרויקט", type: "textarea", id: "description" },
+        ];
+
+        const form = document.getElementById("projectForm");
+        const menu = document.getElementById("menu");
+        const popup = document.getElementById("customElementPopup");
+        const presetElementsDiv = document.getElementById("presetElements");
+
+        document.getElementById("addElementBtn").onclick = () => {
+            menu.classList.toggle("hidden");
+        };
+
+        function addElement(el) {
+            const label = document.createElement("label");
+            label.textContent = el.label;
+            label.setAttribute("for", el.id);
+            form.appendChild(label);
+
+            const wrapper = document.createElement("div");
+            const isDate = el.type === "date";
+            wrapper.className = isDate ? "date-wrapper" : "textarea-container";
+
+            let input;
+            if (el.type === "textarea") {
+                input = document.createElement("textarea");
+            } else if (el.type === "select") {
+                input = document.createElement("select");
+                el.options.forEach(opt => {
+                    const option = document.createElement("option");
+                    option.value = opt;
+                    option.textContent = opt;
+                    input.appendChild(option);
+                });
+            } else {
+                input = document.createElement("input");
+                input.type = el.type;
+            }
+
+            input.id = el.id;
+            input.name = el.id;
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.innerText = "🗑️";
+            deleteBtn.type = "button";
+            deleteBtn.className = isDate ? "delete-outside" : "delete-inside-textarea";
+            deleteBtn.onclick = () => {
+                label.remove();
+                wrapper.remove();
+            };
+
+            wrapper.appendChild(input);
+            wrapper.appendChild(deleteBtn);
+            form.appendChild(wrapper);
+        }
+        elements.forEach((el, index) => {
+            const wrapper = document.createElement("label");
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.value = index;
+            checkbox.dataset.id = el.id;
+
+            const span = document.createElement("span");
+            span.textContent = el.label;
+
+            wrapper.appendChild(checkbox);
+            wrapper.appendChild(span);
+
+            presetElementsDiv.appendChild(wrapper);
+        });
+
+        // הוסף כפתור אישור
+        const confirmBtn = document.createElement("button");
+        confirmBtn.textContent = "אישור";
+        confirmBtn.className = "confirm-btn";
+        confirmBtn.onclick = () => {
+            const selected = presetElementsDiv.querySelectorAll("input[type=checkbox]:checked");
+            selected.forEach(cb => {
+                const el = elements[parseInt(cb.value)];
+                addElement(el);
+            });
+            menu.classList.add("hidden");
+        };
+        menu.appendChild(confirmBtn);
+
+        function addCustomElement() {
+            popup.classList.remove("hidden");
+        }
+
+        function createCustomElement() {
+            const labelText = document.getElementById("customLabel").value;
+            const color = document.getElementById("customColor").value;
+            const text = document.getElementById("customText").value;
+
+            const label = document.createElement("label");
+            label.textContent = labelText;
+            label.style.color = color;
+            form.appendChild(label);
+
+            const wrapper = document.createElement("div");
+            wrapper.className = "textarea-container";
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = text;
+            input.style.color = color;
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.innerText = "🗑️";
+            deleteBtn.type = "button";
+            deleteBtn.className = "delete-inside-textarea";
+            deleteBtn.onclick = () => {
+                label.remove();
+                wrapper.remove();
+            };
+
+            wrapper.appendChild(input);
+            wrapper.appendChild(deleteBtn);
+            form.appendChild(wrapper);
+
+            // ניקוי השדות וסגירה
+            document.getElementById("customLabel").value = "";
+            document.getElementById("customColor").value = "#000000";
+            document.getElementById("customText").value = "";
+            popup.classList.add("hidden");
+        }
+
+        function closePopup() {
+            popup.classList.add("hidden");
+        }
+
+        document.getElementById("createCustomBtn").addEventListener("click", createCustomElement);
+        document.getElementById("closePopupBtn").addEventListener("click", closePopup);
+
+
+
+        document.getElementById("addCustomElementBtn").addEventListener("click", () => {
+            popup.classList.remove("hidden");
+        });
+
+        document.getElementById("saveBtn").addEventListener("click", async () => {
+            const data = {};
+            const inputs = form.querySelectorAll("input, select, textarea");
+            inputs.forEach(input => {
+                const key = input.name || input.id;
+                data[key] = input.value;
+            });
+
+            const { error } = await supabase.from("projects").insert([data]);
+
+            if (error) {
+                alert("שגיאה בשמירה: " + error.message);
+            } else {
+                alert("הפרויקט נשמר בהצלחה!");
+                window.location.href = "home.html";
+            }
+        });
+    </script>
+
 </body>
 
 </html>
