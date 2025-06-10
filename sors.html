@@ -9,9 +9,20 @@
 </head>
 
 <body>
+    <div class="ggg">
+        <button onclick="location.href='home.html'" class="add-btn2">🔙 חזור</button>
+    </div>
+
     <div class="container">
         <div class="header">
-            <button id="addElementBtn">+</button>
+            <button id="addElementBtn" title="הוסף אלמנט">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+            </button>
+
         </div>
         <form id="projectForm">
             <!-- האלמנטים יתוספו כאן -->
@@ -29,33 +40,65 @@
     <!-- פופאפ לאלמנט חדש -->
     <div id="customElementPopup" class="hidden">
         <h3>צור אלמנט מותאם</h3>
-        <label>כותרת:</label>
-        <input type="text" id="customLabel"><br>
-        <label>צבע כותרת:</label>
-        <input type="color" id="customColor"><br>
-        <label>טקסט:</label>
-        <input type="text" id="customText"><br>
-        <button type="button" id="createCustomBtn">הוסף</button>
-        <button type="button" id="closePopupBtn">ביטול</button>
+        <form id="customElementForm">
+            <label>כותרת:</label>
+            <input type="text" id="elementTitle" required>
+            <label>צבע כותרת:</label>
+            <input type="color" id="elementColor" value="#000000">
+            <label>טקסט:</label>
+            <textarea id="elementText" required></textarea>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                <button type="submit" class="submitBtn">הוסף</button>
+                <button type="button" class="submitBtn" id="cancelCustom">ביטול</button>
+            </div>
+        </form>
     </div>
+
+
     <div class="upload-panel">
         <label for="fileUpload" class="upload-label">📁 העלאת קבצים / תמונות / סרטונים</label>
         <input type="file" id="fileUpload" multiple accept="video/*,image/*,.pdf,.doc,.docx" hidden />
+        <div id="filePreviewContainer" class="file-preview-container"></div>
     </div>
     <div id="projectsContainer"></div>
 
+    <!-- מודל לצפייה בתמונה -->
+    <div id="imageModal" class="hidden">
+        <span id="closeModal">&times;</span>
+        <img id="modalImage" src="" alt="הצגה" />
+        <button id="prevImage">◀</button>
+        <button id="nextImage">▶</button>
+    </div>
+
 
     <button id="saveBtn" class="submitBtn" type="button">שמור פרויקט</button>
+    <div id="customBanner" class="hidden"></div>
+
+
 
     <div id="popupOverlay" class="hidden"></div>
-
     <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-        const supabase = createClient(
-            'https://emaxgeigsgvusswhwjtr.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtYXhnZWlnc2d2dXNzd2h3anRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MjY4MTAsImV4cCI6MjA2NTAwMjgxMH0.YysDKHpjuxq9yZ6S6eIN4wR6r0S2jmkdICARMzx6WRM'
-        );
+        const supabaseUrl = 'https://emaxgeigsgvusswhwjtr.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtYXhnZWlnc2d2dXNzd2h3anRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MjY4MTAsImV4cCI6MjA2NTAwMjgxMH0.YysDKHpjuxq9yZ6S6eIN4wR6r0S2jmkdICARMzx6WRM';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // עכשיו תוכל להשתמש ב-supabase.from(...)
+
+        // דוגמה קצרה לבדיקה:
+        const { data, error } = await supabase.from('projects').select('*');
+        console.log(data, error);
+
+        document.getElementById("customElementForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            createCustomElement();
+        });
+
+        document.getElementById("cancelCustom").addEventListener("click", () => {
+            document.getElementById("customElementPopup").classList.add("hidden");
+        });
 
         const elements = [
             { label: "שם הפרויקט", type: "text", id: "projectName" },
@@ -158,13 +201,15 @@
         function addCustomElement() {
             popup.classList.remove("hidden");
         }
-
-        function createCustomElement() {
-            const labelText = document.getElementById("customLabel").value;
-            const color = document.getElementById("customColor").value;
-            const text = document.getElementById("customText").value;
-
+        async function createCustomElement() {
+            const labelText = document.getElementById("elementTitle").value;
+            const color = document.getElementById("elementColor").value;
+            const text = document.getElementById("elementText").value;
+            const projectId = localStorage.getItem("last_project_id"); // או שיטה אחרת לשמור ID
             const label = document.createElement("label");
+
+            console.log("🧪 project_id לשמירה:", projectId);
+
             label.textContent = labelText;
             label.style.color = color;
             form.appendChild(label);
@@ -176,6 +221,10 @@
             input.type = "text";
             input.value = text;
             input.style.color = color;
+
+            const safeId = labelText.replace(/\s+/g, "_");
+            input.name = safeId;
+            input.id = safeId;
 
             const deleteBtn = document.createElement("button");
             deleteBtn.innerText = "🗑️";
@@ -190,19 +239,28 @@
             wrapper.appendChild(deleteBtn);
             form.appendChild(wrapper);
 
-            // ניקוי השדות וסגירה
-            document.getElementById("customLabel").value = "";
-            document.getElementById("customColor").value = "#000000";
-            document.getElementById("customText").value = "";
+
+            if (projectId) {
+                const { error } = await supabase.from("custom_elements").insert([{
+                    project_id: projectId,
+                    title: labelText,
+                    text: text,
+                    color: color
+                }]);
+
+                if (error) {
+                    console.error("שגיאה בשמירת אלמנט מותאם:", error.message);
+                }
+            } else {
+                console.warn("לא נמצא מזהה פרויקט לשמירת אלמנט מותאם.");
+            }
+
+            // ניקוי שדות
+            document.getElementById("elementTitle").value = "";
+            document.getElementById("elementColor").value = "#000000";
+            document.getElementById("elementText").value = "";
             popup.classList.add("hidden");
         }
-
-        function closePopup() {
-            popup.classList.add("hidden");
-        }
-
-        document.getElementById("createCustomBtn").addEventListener("click", createCustomElement);
-        document.getElementById("closePopupBtn").addEventListener("click", closePopup);
 
 
 
@@ -211,24 +269,271 @@
         });
 
         document.getElementById("saveBtn").addEventListener("click", async () => {
+            const form = document.querySelector("form");
             const data = {};
             const inputs = form.querySelectorAll("input, select, textarea");
             inputs.forEach(input => {
                 const key = input.name || input.id;
-                data[key] = input.value;
+                const value = input.value;
+                if (key && value !== "") {
+                    data[key] = value;
+                }
             });
 
-            const { error } = await supabase.from("projects").insert([data]);
+            // ⬅️ כאן מוסיפים את קטע העלאת המדיה
+            const mediaUrls = [];
+
+            for (const file of uploadedFiles) {
+                const ext = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${ext}`;
+                console.log("📤 מעלה:", fileName, file);
+
+                const { data: publicData } = supabase
+                    .storage
+                    .from('media')
+                    .getPublicUrl(fileName);
+
+                if (publicData?.publicUrl) {
+                    mediaUrls.push(publicData.publicUrl);
+                    console.log("🔗 URL נוסף:", publicData.publicUrl);
+                } else {
+                    console.warn("⚠️ לא נוצר URL ציבורי עבור:", fileName);
+                }
+
+                const url = supabase
+                    .storage
+                    .from('media')
+                    .getPublicUrl(fileName).data.publicUrl;
+
+
+                mediaUrls.push(url);
+            }
+        }); document.getElementById("saveBtn").addEventListener("click", async () => {
+            const form = document.querySelector("form");
+            const data = {};
+            const inputs = form.querySelectorAll("input, select, textarea");
+
+            inputs.forEach(input => {
+                const key = input.name || input.id;
+                const value = input.value;
+                if (key && value !== "") {
+                    data[key] = value;
+                }
+            });
+
+            // ⬅️ שלב 1: העלאת קבצי מדיה
+            const mediaUrls = [];
+
+            for (const file of uploadedFiles) {
+                const ext = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${ext}`;
+
+                const { data: uploadData, error: uploadError } = await supabase
+                    .storage
+                    .from('media') // ודא שיצרת bucket בשם 'media'
+                    .upload(fileName, file);
+
+                if (uploadError) {
+                    console.error("שגיאה בהעלאת קובץ:", uploadError.message);
+                    continue;
+                }
+
+                const { data: publicUrlData } = supabase
+                    .storage
+                    .from('media')
+                    .getPublicUrl(fileName);
+
+                mediaUrls.push(publicUrlData.publicUrl);
+            }
+
+            // ⬅️ שלב 2: יצירת אובייקט ושמירה לטבלה
+            const fixedData = {
+                projectname: data.projectName,
+                projectcode: data.projectCode,
+                startdate: data.startDate,
+                enddate: data.endDate,
+                address: data.address,
+                city: data.city,
+                status: data.status,
+                type: data.type,
+                area: data.area,
+                height: data.height,
+                floors: data.floors,
+                budget: data.budget,
+                description: data.description,
+                media_urls: mediaUrls // ודא שיש עמודה כזו בטבלת 'projects'
+            };
+
+            const { data: saved, error } = await supabase
+                .from('projects')
+                .insert([fixedData])
+                .select()
+                .single();
 
             if (error) {
-                alert("שגיאה בשמירה: " + error.message);
+                console.error("שגיאה בשמירת פרויקט:", error.message);
+                showCustomBanner("שגיאה בשמירה: " + error.message);
             } else {
-                alert("הפרויקט נשמר בהצלחה!");
-                window.location.href = "home.html";
+                localStorage.setItem("last_project_id", saved.id);
+                showCustomBanner("הפרויקט נשמר בהצלחה!");
+                setTimeout(() => {
+                    window.location.href = "home.html";
+                }, 500);
             }
         });
-    </script>
 
+
+        function showCustomBanner(message, duration = 3000) {
+            const banner = document.getElementById("customBanner");
+            banner.textContent = message;
+            banner.classList.remove("hidden");
+            banner.classList.add("show");
+
+            setTimeout(() => {
+                banner.classList.remove("show");
+                setTimeout(() => {
+                    banner.classList.add("hidden");
+                }, 500);
+            }, duration);
+        }
+
+        const fileInput = document.getElementById("fileUpload");
+        const previewContainer = document.getElementById("filePreviewContainer");
+        let uploadedFiles = [];
+
+        fileInput.addEventListener("change", (e) => {
+            const files = Array.from(e.target.files);
+
+            files.forEach(file => {
+                const url = URL.createObjectURL(file);
+
+                const wrapper = document.createElement("div");
+                wrapper.className = "preview-wrapper";
+
+                const preview = document.createElement(file.type.startsWith("image/") ? "img" : "video");
+                preview.src = url;
+                if (file.type.startsWith("video/")) preview.controls = true;
+
+                preview.className = "preview-item";
+
+                if (file.type.startsWith("image/")) {
+                    previewImages.push(preview);
+                    const index = previewImages.length - 1;
+                    preview.onclick = () => openImageViewer(index);
+                }
+
+
+                // כפתור מחיקה
+                const deleteBtn = document.createElement("button");
+                deleteBtn.className = "delete-preview-outside";
+
+                const icon = document.createElement("img");
+                icon.src = "images/delete-icon.png";
+                icon.alt = "מחק";
+                icon.style.width = "22px";
+                icon.style.height = "22px";
+                deleteBtn.appendChild(icon);
+
+                deleteBtn.onclick = () => {
+                    wrapper.remove();
+                    uploadedFiles = uploadedFiles.filter(f => f !== file);
+
+                    // מסיר מהמערך גם את התמונה לפופאפ (אם קיימת)
+                    if (file.type.startsWith("image/")) {
+                        const indexToRemove = previewImages.findIndex(p => p.src === url);
+                        if (indexToRemove !== -1) previewImages.splice(indexToRemove, 1);
+                    }
+                };
+
+                wrapper.appendChild(deleteBtn);
+                wrapper.appendChild(preview);
+                previewContainer.appendChild(wrapper);
+                uploadedFiles.push(file);
+            });
+
+
+            fileInput.value = '';
+        });
+
+        const modal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("modalImage");
+        const closeModal = document.getElementById("closeModal");
+        const prevBtn = document.getElementById("prevImage");
+        const nextBtn = document.getElementById("nextImage");
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let touchStartTime = 0;
+
+        modal.addEventListener("touchstart", (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartTime = new Date().getTime();
+        });
+
+        modal.addEventListener("touchend", (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            const duration = new Date().getTime() - touchStartTime;
+            handleSwipe(duration);
+        });
+
+        function handleSwipe(duration) {
+            const distance = touchStartX - touchEndX;
+            const fast = duration < 500; // זמן קצר להחלקה
+            const far = Math.abs(distance) > 100; // מרחק מינימלי של 100 פיקסלים להחלקה
+
+            // הפעל החלקה רק אם המרחק מספיק גדול והמגע היה מהיר
+            if (!far || !fast) return;
+
+            if (distance > 0) {
+                updateViewer(1); // החלקה שמאלה
+            } else {
+                updateViewer(-1); // החלקה ימינה
+            }
+        }
+
+        let previewImages = [];
+        let currentIndex = 0;
+
+        function openImageViewer(index) {
+            currentIndex = index;
+            modalImg.src = previewImages[index].src;
+            modal.classList.remove("hidden");
+            // אפס את משתני המגע כדי למנוע דפדוף לא רצוי
+            touchStartX = 0;
+            touchEndX = 0;
+        }
+
+        closeModal.onclick = () => modal.classList.add("hidden");
+        prevBtn.onclick = () => updateViewer(-1);
+        nextBtn.onclick = () => updateViewer(1);
+
+        function updateViewer(direction) {
+            const outClass = direction > 0 ? 'slide-out-left' : 'slide-out-right';
+            const inClass = direction > 0 ? 'slide-in-right' : 'slide-in-left';
+
+            modalImg.classList.add(outClass);
+
+            modalImg.addEventListener('animationend', function handler() {
+                modalImg.removeEventListener('animationend', handler);
+
+                // עדכון אינדקס ותמונה
+                currentIndex += direction;
+                if (currentIndex < 0) currentIndex = previewImages.length - 1;
+                if (currentIndex >= previewImages.length) currentIndex = 0;
+                modalImg.src = previewImages[currentIndex].src;
+
+                // הכנסה עם אנימציה
+                modalImg.classList.remove(outClass);
+                modalImg.classList.add(inClass);
+
+                modalImg.addEventListener('animationend', function cleanup() {
+                    modalImg.removeEventListener('animationend', cleanup);
+                    modalImg.classList.remove(inClass);
+                });
+            });
+        }
+
+    </script>
 </body>
 
 </html>
