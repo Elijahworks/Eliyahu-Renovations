@@ -1,0 +1,247 @@
+/* סגנון מודרני ונקי לעמוד פרויקט בודד, מותאם לנייד ולמשב */
+
+body {
+    font-family: 'Segoe UI', 'Heebo', Arial, sans-serif;
+    background: #f6f8fa;
+    color: #23272f;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    direction: rtl;
+}
+
+header {
+    background: #ffffffcc;
+    box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.04);
+    padding: 18px 0 10px 0;
+    margin-bottom: 22px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.header-title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #1a73e8;
+    margin-right: 24px;
+    letter-spacing: 0.03em;
+    text-align: center;
+    flex: 1;
+}
+
+.add-btn {
+    background: #f3f7fa;
+    color: #1a73e8;
+    border: 1.5px solid #e3e7ee;
+    border-radius: 7px;
+    padding: 0.55em 1.5em;
+    font-size: 1.00rem;
+    font-family: inherit;
+    cursor: pointer;
+    margin-left: 20px;
+    box-shadow: 0 1px 4px rgba(26, 115, 232, 0.04);
+    transition: background 0.15s, color 0.18s, border 0.15s;
+}
+
+.add-btn:hover,
+.add-btn:focus {
+    background: #e8f0fe;
+    color: #174ea6;
+    border-color: #c5d4ec;
+}
+
+main {
+    max-width: 530px;
+    margin: 38px auto 0 auto;
+    padding: 0 18px 36px 18px;
+}
+
+.project-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 16px 0 rgba(40, 61, 89, 0.07), 0 1.5px 4px 0 rgba(0, 0, 0, 0.04);
+    padding: 26px 18px 18px 18px;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7em;
+    position: relative;
+    align-items: center;
+    text-align: center;
+    border: 1px solid #e8e8e8;
+    word-break: break-word;
+}
+
+.project-card h3 {
+    font-size: 1.22rem;
+    color: #2266bb;
+    margin-bottom: 10px;
+    margin-top: 0;
+    text-align: center;
+    letter-spacing: 0.03em;
+}
+
+.project-card p {
+    margin: 0 0 8px 0;
+    line-height: 1.6;
+    font-size: 1.01em;
+    text-align: center;
+}
+
+hr {
+    border: none;
+    border-top: 1.5px solid #e2e8ee;
+    margin: 30px 0;
+}
+
+#customElements {
+    margin-top: 0.7em;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+#customElements>div {
+    border: 1px solid #e8e8e8;
+    background: #fafcff;
+    border-radius: 12px;
+    padding: 14px 18px 12px 18px;
+    box-shadow: 0 1px 6px 0 rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.13s;
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    word-break: break-word;
+}
+
+#customElements>div:hover {
+    box-shadow: 0 3px 16px 0 rgba(26, 115, 232, 0.07);
+}
+
+#customElements h4 {
+    margin-bottom: 6px;
+    font-size: 1.11em;
+    font-weight: 600;
+    color: #2266bb;
+    text-align: center;
+}
+
+#customElements p {
+    margin: 0 0 6px 0;
+    font-size: 1em;
+    text-align: center;
+}
+
+
+
+/* טאבלט ומטה */
+@media (max-width: 800px) {
+    main {
+        max-width: 98vw;
+        padding: 0 2vw 36px 2vw;
+    }
+
+    .header-title {
+        font-size: 1.15rem;
+        margin-right: 7px;
+    }
+
+    .add-btn {
+        font-size: 0.93rem;
+        padding: 0.45em 1.1em;
+        margin-left: 10px;
+    }
+}
+
+/* מובייל */
+@media (max-width: 600px) {
+    header {
+        padding: 12px 0 8px 0;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .header-title {
+        font-size: 1.05rem;
+        margin: 0 0 4px 0;
+        width: 100%;
+    }
+
+    .add-btn {
+        font-size: 0.93rem;
+        padding: 0.45em 1.1em;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    main {
+        padding: 0 1vw 20px 1vw;
+    }
+
+    .project-card {
+        padding: 14px 7px 10px 7px;
+        border-radius: 8px;
+        min-height: 110px;
+    }
+
+    #customElements>div {
+        padding: 10px 5px 9px 5px;
+        border-radius: 8px;
+        max-width: 98vw;
+    }
+}
+
+/* ממש קטן */
+@media (max-width: 400px) {
+    .header-title {
+        font-size: 0.98rem;
+    }
+
+    .project-card h3 {
+        font-size: 1.05rem;
+    }
+
+    #customElements>div {
+        font-size: 0.97em;
+    }
+}
+
+.delete-project-btn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: #ffdddd;
+    border: 1px solid #e60000;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 10;
+    transition: background 0.2s;
+}
+
+.delete-project-btn:hover {
+    background: #ffcccc;
+}
+
+button#deleteBtn {
+    background-color: #e53935;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button#editBtn {
+    background-color: #2196f3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}

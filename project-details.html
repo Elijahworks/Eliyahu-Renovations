@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="he">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>פרויקט בודד</title>
+    <link rel="stylesheet" href="style4.css" />
+</head>
+
+<body>
+    <header>
+        <button onclick="location.href='projects.html'" class="add-btn">🔙 חזור</button>
+    </header>
+
+    <main>
+        <!-- באנר אישור מחיקה -->
+        <div id="deleteBanner"
+            style="display:none; position:fixed; top:0; left:0; right:0; background:#ffe0e0; color:#333; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.2); text-align:center; z-index:9999;">
+            <p style="margin:0; font-size:18px;">האם אתה בטוח שברצונך למחוק את הפרויקט?</p>
+            <div style="margin-top:10px;">
+                <button id="confirmDeleteBtn"
+                    style="background:#d32f2f; color:#fff; padding:8px 16px; border:none; border-radius:5px; margin-left:10px;">כן,
+                    מחק</button>
+                <button id="cancelDeleteBtn"
+                    style="background:#ccc; color:#000; padding:8px 16px; border:none; border-radius:5px;">ביטול</button>
+            </div>
+        </div>
+        <!-- באנר הצלחה -->
+        <div id="successBanner" style="
+    display:none;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4c77af;
+    color: #fff;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    font-size: 16px;
+    z-index: 9999;
+    transition: opacity 0.3s ease;">
+            ✅ הפרויקט נמחק בהצלחה!
+        </div>
+
+
+        <div class="project-card">
+            <!-- פרטי הפרויקט -->
+            <div id="projectDetails"></div>
+
+            <!-- כותרת משנה -->
+            <hr style="margin: 30px 0" />
+            <h4 style="text-align: center; margin-bottom: 15px">אלמנטים מותאמים בפרויקט</h4>
+
+            <!-- האלמנטים -->
+            <div id="customElements"></div>
+        </div>
+    </main>
+    <div id="overlay" style="
+    display:none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9998;">
+    </div>
+
+
+    <script type="module">
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+        const supabase = createClient(
+            'https://emaxgeigsgvusswhwjtr.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtYXhnZWlnc2d2dXNzd2h3anRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MjY4MTAsImV4cCI6MjA2NTAwMjgxMH0.YysDKHpjuxq9yZ6S6eIN4wR6r0S2jmkdICARMzx6WRM'
+        );
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = urlParams.get('id');
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            // שליפת פרטי הפרויקט
+            const { data: project, error: projectError } = await supabase
+                .from("projects")
+                .select("*")
+                .eq("id", projectId)
+                .single();
+
+            const projectContainer = document.getElementById("projectDetails");
+
+            if (projectError) {
+                projectContainer.innerHTML = "<p>שגיאה בטעינת פרטי הפרויקט.</p>";
+            } else {
+                let content = `
+  <h3>${project.projectname || "ללא שם"}</h3>
+  <p><strong>תיאור:</strong> ${project.description || "אין תיאור זמין"}</p>
+  <p><strong>סטטוס:</strong> ${project.status || "לא הוזן"}</p>
+  <p><strong>עיר:</strong> ${project.city || "לא צוינה"}</p>
+  <p><strong>גובה:</strong> ${project.height || "-"}</p>
+  <p><strong>מס' קומות:</strong> ${project.floors || "-"}</p>
+  <p><strong>שטח:</strong> ${project.area || "-"}</p>
+  <p><strong>כתובת:</strong> ${project.address || "-"}</p>
+
+  <div style="margin-top: 20px;">
+    <button id="editBtn" style="margin-left: 10px;">✏️ ערוך פרויקט</button>
+    <button id="deleteBtn" style="background-color: red; color: white;">🗑️ מחק פרויקט</button>
+  </div>
+`;
+
+                // הצגת תמונות/סרטונים מתוך media_urls
+                if (Array.isArray(project.media_urls)) {
+                    project.media_urls.forEach(url => {
+                        const ext = url.split('.').pop().toLowerCase();
+                        if (['mp4', 'webm', 'ogg'].includes(ext)) {
+                            content += `
+                <video controls style="max-width:100%; border-radius:8px; margin:10px 0;">
+                  <source src="${url}" type="video/${ext}">
+                  הדפדפן שלך לא תומך בסרטון.
+                </video>`;
+                        } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+                            content += `<img src="${url}" style="max-width:100%; border-radius:8px; margin:10px 0;">`;
+                        }
+                    });
+                }
+
+                projectContainer.innerHTML = content;
+
+                document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+                    const { error: deleteError } = await supabase
+                        .from("projects")
+                        .delete()
+                        .eq("id", projectId);
+
+                    if (deleteError) {
+                        alert("שגיאה במחיקה: " + deleteError.message);
+                        return;
+                    }
+
+                    // הסתרת באנר ואוברליי אחרי לחיצה על מחק
+                    document.getElementById("deleteBanner").style.display = "none";
+                    document.getElementById("overlay").style.display = "none";
+
+                    // הצגת באנר הצלחה
+                    const successBanner = document.getElementById("successBanner");
+                    successBanner.style.display = "block";
+
+                    setTimeout(() => {
+                        successBanner.style.opacity = "1";
+                    }, 10);
+
+                    setTimeout(() => {
+                        successBanner.style.opacity = "0";
+                        setTimeout(() => {
+                            successBanner.style.display = "none";
+                            window.location.href = "projects.html";
+                        }, 300);
+                    }, 2000);
+                });
+
+                document.getElementById("cancelDeleteBtn").addEventListener("click", () => {
+                    document.getElementById("deleteBanner").style.display = "none";
+                    document.getElementById("overlay").style.display = "none";
+                });
+
+
+
+                document.getElementById("editBtn").addEventListener("click", () => {
+                    // נניח שיש לך דף בשם edit-project.html?id=xxx
+                    window.location.href = `edit-project.html?id=${projectId}`;
+                });
+
+                document.getElementById("deleteBtn").addEventListener("click", () => {
+                    document.getElementById("deleteBanner").style.display = "block";
+                    document.getElementById("overlay").style.display = "block";
+                });
+
+
+            }
+
+            // שליפה של custom elements
+            const { data: customElements, error: customError } = await supabase
+                .from("custom_elements")
+                .select("*")
+                .eq("project_id", projectId)
+                .order("created_at", { ascending: true });
+
+            const customContainer = document.getElementById("customElements");
+
+            if (customError) {
+                customContainer.innerHTML = "<p style='text-align:center; color: red;'>שגיאה בטעינת אלמנטים.</p>";
+            } else if (customElements.length === 0) {
+                customContainer.innerHTML = "<p style='text-align:center;'>אין אלמנטים מותאמים לפרויקט זה.</p>";
+            } else {
+                customContainer.style.display = "flex";
+                customContainer.style.flexDirection = "column";
+                customContainer.style.gap = "15px";
+
+                customElements.forEach(item => {
+                    const el = document.createElement("div");
+                    el.style.border = "1px solid #ddd";
+                    el.style.padding = "12px";
+                    el.style.borderRadius = "12px";
+                    el.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.05)";
+                    el.style.background = "#fff";
+
+                    el.innerHTML = `
+            <h4 style="color:${item.color || '#333'}; margin-bottom: 6px;">${item.title || 'ללא כותרת'}</h4>
+            <p style="margin: 0 0 8px 0;">${item.text || ''}</p>
+            <p style="font-size:0.85em;color:#888; text-align:left;">🕒 ${new Date(item.created_at).toLocaleString('he-IL')}</p>
+          `;
+
+                    customContainer.appendChild(el);
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

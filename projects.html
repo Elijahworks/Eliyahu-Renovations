@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="he">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>כל הפרויקטים</title>
+    <link rel="stylesheet" href="style5.css">
+</head>
+
+<body>
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="header-title">רשימת פרויקטים</div>
+            <button onclick="location.href='home.html'" class="add-btn">🔙 חזור</button>
+        </div>
+    </header>
+
+    <main>
+        <div id="projectsContainer" class="project-grid"></div>
+    </main>
+
+    <script type="module">
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+        const supabase = createClient(
+            'https://emaxgeigsgvusswhwjtr.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtYXhnZWlnc2d2dXNzd2h3anRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MjY4MTAsImV4cCI6MjA2NTAwMjgxMH0.YysDKHpjuxq9yZ6S6eIN4wR6r0S2jmkdICARMzx6WRM'
+        );
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const { data: projects, error } = await supabase
+                .from("projects")
+                .select("*")
+                .order("id", { ascending: false });
+
+            if (error) {
+                console.error("שגיאה בשליפת פרויקטים:", error.message);
+                return;
+            }
+
+            const container = document.getElementById("projectsContainer");
+            container.innerHTML = "";
+
+            if (projects.length === 0) {
+                container.innerHTML = "<div class='no-projects'>אין פרויקטים להצגה</div>";
+                return;
+            }
+
+            projects.forEach(project => {
+                const card = document.createElement("div");
+                card.className = "project-card";
+                card.style.cursor = "pointer";
+                card.innerHTML = `
+                    <h3>${project.projectname || "ללא שם"}</h3>
+                    <p>${project.description || "אין תיאור"}</p>
+                    <p><strong>עיר:</strong> ${project.city || "-"}</p>
+                `;
+                card.onclick = () => {
+                    window.location.href = `project-details.html?id=${project.id}`;
+                };
+                container.appendChild(card);
+            });
+        });
+    </script>
+</body>
+
+</html>

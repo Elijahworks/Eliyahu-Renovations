@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="he">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>עריכת פרויקט</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>עריכת פרויקט</h2>
+    <form id="editForm">
+        <label>שם פרויקט: <input type="text" name="projectname" required /></label>
+        <label>תיאור: <textarea name="description"></textarea></label>
+        <label>סטטוס: <input type="text" name="status" /></label>
+        <label>עיר: <input type="text" name="city" /></label>
+        <label>גובה: <input type="text" name="height" /></label>
+        <label>קומות: <input type="number" name="floors" /></label>
+        <label>שטח: <input type="text" name="area" /></label>
+        <label>כתובת: <input type="text" name="address" /></label>
+        <button type="submit">💾 שמור</button>
+    </form>
+
+    <script type="module">
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+        const supabase = createClient(
+            'https://emaxgeigsgvusswhwjtr.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        );
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = urlParams.get("id");
+        const form = document.getElementById("editForm");
+
+        // טען נתוני פרויקט
+        document.addEventListener("DOMContentLoaded", async () => {
+            const { data: project } = await supabase
+                .from("projects")
+                .select("*")
+                .eq("id", projectId)
+                .single();
+
+            for (const key in project) {
+                if (form.elements[key]) form.elements[key].value = project[key];
+            }
+        });
+
+        // שמור שינויים
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const updates = {};
+
+            formData.forEach((value, key) => {
+                updates[key] = value;
+            });
+
+            const { error } = await supabase
+                .from("projects")
+                .update(updates)
+                .eq("id", projectId);
+
+            if (error) {
+                alert("שגיאה בשמירה: " + error.message);
+            } else {
+                alert("הפרויקט עודכן בהצלחה!");
+                location.href = `project-details.html?id=${projectId}`;
+            }
+        });
+    </script>
+</body>
+
+</html>
