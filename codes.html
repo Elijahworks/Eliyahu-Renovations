@@ -137,15 +137,6 @@
             }
         });
 
-        function showBanner(message, duration = 3000) {
-            banner.textContent = message;
-            banner.classList.remove("hidden");
-            clearTimeout(banner._timeout);
-            banner._timeout = setTimeout(() => {
-                banner.classList.add("hidden");
-            }, duration);
-        }
-
         function togglePasswordVisibility() {
             const input = accessCodeInput;
             const btn = document.querySelector('.toggle-visibility');
@@ -159,6 +150,7 @@
             input.focus();
         }
     </script>
+    <script src="utils.js"></script>
 
 </body>
 
