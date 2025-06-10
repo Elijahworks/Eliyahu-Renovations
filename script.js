@@ -19,17 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     document.querySelector("h2").innerText = modeTitles[mode];
-
-    function showBanner(message, type = "info", duration = 2500) {
-        banner.textContent = message;
-        banner.classList.remove("hidden", "error", "info");
-        banner.classList.add(type);
-        clearTimeout(banner._timeout);
-        banner._timeout = setTimeout(() => {
-            banner.classList.add("hidden");
-        }, duration);
-    }
-
     function updateDisplay() {
         displayDots.forEach((dot, i) => {
             dot.classList.toggle('filled', i < pin.length);
