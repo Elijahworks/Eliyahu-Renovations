@@ -29,6 +29,8 @@
 
 
     <main>
+        <button onclick="location.href='projects.html'" class="modern-clean-btn">📁 הצג פרויקטים</button>
+
         <!-- תיבת התראות -->
         <div id="notificationBox" class="notification-box"></div>
 
@@ -41,105 +43,17 @@
             </div>
         </div>
 
-        <!-- אזור הפרויקטים בלבד -->
-        <div id="projectsContainer"></div>
+
     </main>
 
 
-    <div class="pagination" id="pagination"></div>
 
     <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-        const supabase = createClient('https://emaxgeigsgvusswhwjtr.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtYXhnZWlnc2d2dXNzd2h3anRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MjY4MTAsImV4cCI6MjA2NTAwMjgxMH0.YysDKHpjuxq9yZ6S6eIN4wR6r0S2jmkdICARMzx6WRM'); // אותו מפתח מ-sors.html
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-        async function loadProjects() {
-            const { data, error } = await supabase
-                .from("projects")
-                .select("*")
-                .order("id", { ascending: false });
-
-            if (error) {
-                console.error("שגיאה בשליפה מ-Supabase:", error.message);
-                return;
-            }
-
-            const container = document.getElementById("projectsContainer");
-            container.innerHTML = ""; // איפוס
-
-            data.forEach(project => {
-                const card = document.createElement("div");
-                card.className = "project-card";
-                card.innerHTML = `
-        <h3>${project.projectName || "ללא שם"}</h3>
-        <p>${project.description || "אין תיאור"}</p>
-        <p><strong>סטטוס:</strong> ${project.status || "לא ידוע"}</p>
-        <p><strong>עיר:</strong> ${project.city || "-"}</p>
-      `;
-                container.appendChild(card);
-            });
-        }
-
-        document.addEventListener("DOMContentLoaded", loadProjects);
-
-        const PROJECTS_PER_PAGE = 10;
-        const fallbackImage = 'fallback.png'; // תמונה קבועה מקומית למקרה שאין תמונות
-
-        // התחלה עם אפס פרויקטים (ייווצרו דינמית מאוחר יותר)
-        const allProjects = []; // להתחלה ללא נתונים
-
-        let currentPage = 1;
-
-        function renderProjects(page) {
-            const container = document.getElementById("projectsContainer");
-            container.innerHTML = "";
-
-            if (allProjects.length === 0) {
-                container.innerHTML = '<div class="no-projects">אין עדיין פרויקטים להצגה</div>';
-                document.getElementById("pagination").innerHTML = "";
-                return;
-            }
-
-            const start = (page - 1) * PROJECTS_PER_PAGE;
-            const end = start + PROJECTS_PER_PAGE;
-            const projects = allProjects.slice(start, end);
-
-            projects.forEach(project => {
-                const imgSrc = project.images && project.images.length > 0
-                    ? project.images[Math.floor(Math.random() * project.images.length)]
-                    : fallbackImage;
-
-                const card = document.createElement("div");
-                card.className = "project-card";
-                card.innerHTML = `
-          <img src="${imgSrc}" alt="תמונה של ${project.name}">
-          <h3>${project.name}</h3>
-        `;
-                container.appendChild(card);
-            });
-        }
-
-        function renderPagination() {
-            const totalPages = Math.ceil(allProjects.length / PROJECTS_PER_PAGE);
-            const pagination = document.getElementById("pagination");
-            pagination.innerHTML = "";
-
-            if (totalPages <= 1) return;
-
-            for (let i = 1; i <= totalPages; i++) {
-                const btn = document.createElement("button");
-                btn.textContent = i;
-                if (i === currentPage) btn.classList.add("active");
-                btn.addEventListener("click", () => {
-                    currentPage = i;
-                    renderProjects(currentPage);
-                    renderPagination();
-                });
-                pagination.appendChild(btn);
-            }
-        }
-
-        renderProjects(currentPage);
-        renderPagination();
+        const supabaseUrl = 'https://emaxgeigsgvusswhwjtr.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtYXhnZWlnc2d2dXNzd2h3anRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MjY4MTAsImV4cCI6MjA2NTAwMjgxMH0.YysDKHpjuxq9yZ6S6eIN4wR6r0S2jmkdICARMzx6WRM'; // תחליף את זה למפתח שלך
+        const supabase = createClient(supabaseUrl, supabaseKey);
 
         function copySecretCode() {
             const button = document.getElementById("copyCodeBtn");
@@ -182,7 +96,10 @@
                 input.value = "";
             }
         }
+
+
     </script>
+    <script src="utils.js"></script>
 </body>
 
 </html>
