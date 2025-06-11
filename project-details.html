@@ -92,91 +92,128 @@
             if (projectError) {
                 projectContainer.innerHTML = "<p>שגיאה בטעינת פרטי הפרויקט.</p>";
             } else {
-                let content = `
-  <h3>${project.projectname || "ללא שם"}</h3>
-  <p><strong>תיאור:</strong> ${project.description || "אין תיאור זמין"}</p>
-  <p><strong>סטטוס:</strong> ${project.status || "לא הוזן"}</p>
-  <p><strong>עיר:</strong> ${project.city || "לא צוינה"}</p>
-  <p><strong>גובה:</strong> ${project.height || "-"}</p>
-  <p><strong>מס' קומות:</strong> ${project.floors || "-"}</p>
-  <p><strong>שטח:</strong> ${project.area || "-"}</p>
-  <p><strong>כתובת:</strong> ${project.address || "-"}</p>
+                let imageUrl = "";
+                if (Array.isArray(project.media_urls)) {
+                    const firstImage = project.media_urls.find(url =>
+                        ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(url.split('.').pop().toLowerCase())
+                    );
+                    if (firstImage) imageUrl = firstImage;
+                }
 
-  <div style="margin-top: 20px;">
-    <button id="editBtn" style="margin-left: 10px;">✏️ ערוך פרויקט</button>
-    <button id="deleteBtn" style="background-color: red; color: white;">🗑️ מחק פרויקט</button>
+                let content = `
+<div class="project-card-info two-column-layout">
+  <div class="project-image-side">
+<div class="image-icon-wrapper">
+  <img src="images/insert-picture-icon.png" alt="הצג תמונה" class="image-icon" id="showImageBtn" />
+  <span class="image-icon-label">תמונות</span>
+</div>
+
+
+<div id="imagePopup" class="image-popup">
+  <span class="close-popup" id="closePopupBtn">&times;</span>
+  <img src="${imageUrl || 'https://via.placeholder.com/240'}" alt="תמונה גדולה" class="popup-image" />
+</div>
   </div>
+  <div class="project-text-side">
+    <h3 class="project-title">${project.projectname || "ללא שם"}</h3>
+
+    <div class="project-description">
+      <p><strong>תיאור:</strong> ${project.description || "אין תיאור זמין"}</p>
+    </div>
+
+    <div class="project-details-grid">
+      <div><span class="project-label">סטטוס:</span> <span class="project-value">${project.status || "לא הוזן"}</span></div>
+      <div><span class="project-label">עיר:</span> <span class="project-value">${project.city || "לא צוינה"}</span></div>
+      <div><span class="project-label">גובה:</span> <span class="project-value">${project.height || "-"}</span></div>
+      <div><span class="project-label">קומות:</span> <span class="project-value">${project.floors || "-"}</span></div>
+      <div><span class="project-label">שטח:</span> <span class="project-value">${project.area || "-"}</span></div>
+      <div><span class="project-label">כתובת:</span> <span class="project-value">${project.address || "-"}</span></div>
+    </div>
+
+    <div class="project-card-actions">
+      <button id="editBtn">✏️ ערוך פרויקט</button>
+      <button id="deleteBtn">🗑️ מחק פרויקט</button>
+    </div>
+  </div>
+</div>
 `;
 
-                // הצגת תמונות/סרטונים מתוך media_urls
-                if (Array.isArray(project.media_urls)) {
-                    project.media_urls.forEach(url => {
-                        const ext = url.split('.').pop().toLowerCase();
-                        if (['mp4', 'webm', 'ogg'].includes(ext)) {
-                            content += `
-                <video controls style="max-width:100%; border-radius:8px; margin:10px 0;">
-                  <source src="${url}" type="video/${ext}">
-                  הדפדפן שלך לא תומך בסרטון.
-                </video>`;
-                        } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-                            content += `<img src="${url}" style="max-width:100%; border-radius:8px; margin:10px 0;">`;
-                        }
-                    });
-                }
+                project.media_urls.forEach(url => {
+                    const ext = url.split('.').pop().toLowerCase();
+                    if (['mp4', 'webm', 'ogg'].includes(ext)) {
+                        content += `
+      <video controls style="max-width:100%; border-radius:8px; margin:10px 0;">
+        <source src="${url}" type="video/${ext}">
+        הדפדפן שלך לא תומך בסרטון.
+      </video>`;
+                    }
+                });
+
+
 
                 projectContainer.innerHTML = content;
 
-                document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
-                    const { error: deleteError } = await supabase
-                        .from("projects")
-                        .delete()
-                        .eq("id", projectId);
-
-                    if (deleteError) {
-                        alert("שגיאה במחיקה: " + deleteError.message);
-                        return;
-                    }
-
-                    // הסתרת באנר ואוברליי אחרי לחיצה על מחק
-                    document.getElementById("deleteBanner").style.display = "none";
-                    document.getElementById("overlay").style.display = "none";
-
-                    // הצגת באנר הצלחה
-                    const successBanner = document.getElementById("successBanner");
-                    successBanner.style.display = "block";
-
-                    setTimeout(() => {
-                        successBanner.style.opacity = "1";
-                    }, 10);
-
-                    setTimeout(() => {
-                        successBanner.style.opacity = "0";
-                        setTimeout(() => {
-                            successBanner.style.display = "none";
-                            window.location.href = "projects.html";
-                        }, 300);
-                    }, 2000);
+                document.getElementById("showImageBtn")?.addEventListener("click", () => {
+                    document.getElementById("imagePopup").style.display = "flex";
                 });
 
-                document.getElementById("cancelDeleteBtn").addEventListener("click", () => {
-                    document.getElementById("deleteBanner").style.display = "none";
-                    document.getElementById("overlay").style.display = "none";
+                document.getElementById("closePopupBtn")?.addEventListener("click", () => {
+                    document.getElementById("imagePopup").style.display = "none";
                 });
-
-
-
-                document.getElementById("editBtn").addEventListener("click", () => {
-                    // נניח שיש לך דף בשם edit-project.html?id=xxx
-                    window.location.href = `edit-project.html?id=${projectId}`;
-                });
-
-                document.getElementById("deleteBtn").addEventListener("click", () => {
-                    document.getElementById("deleteBanner").style.display = "block";
-                    document.getElementById("overlay").style.display = "block";
-                });
-
 
             }
+
+            document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+                const { error: deleteError } = await supabase
+                    .from("projects")
+                    .delete()
+                    .eq("id", projectId);
+
+                if (deleteError) {
+                    alert("שגיאה במחיקה: " + deleteError.message);
+                    return;
+                }
+
+                // הסתרת באנר ואוברליי אחרי לחיצה על מחק
+                document.getElementById("deleteBanner").style.display = "none";
+                document.getElementById("overlay").style.display = "none";
+
+                // הצגת באנר הצלחה
+                const successBanner = document.getElementById("successBanner");
+                successBanner.style.display = "block";
+
+                setTimeout(() => {
+                    successBanner.style.opacity = "1";
+                }, 10);
+
+                setTimeout(() => {
+                    successBanner.style.opacity = "0";
+                    setTimeout(() => {
+                        successBanner.style.display = "none";
+                        window.location.href = "projects.html";
+                    }, 300);
+                }, 2000);
+            });
+
+            document.getElementById("cancelDeleteBtn").addEventListener("click", () => {
+                document.getElementById("deleteBanner").style.display = "none";
+                document.getElementById("overlay").style.display = "none";
+            });
+
+
+
+            document.getElementById("editBtn").addEventListener("click", () => {
+                // נניח שיש לך דף בשם edit-project.html?id=xxx
+                window.location.href = `edit-project.html?id=${projectId}`;
+            });
+
+            document.getElementById("deleteBtn").addEventListener("click", () => {
+                document.getElementById("deleteBanner").style.display = "block";
+                document.getElementById("overlay").style.display = "block";
+            });
+
+
+
 
             // שליפה של custom elements
             const { data: customElements, error: customError } = await supabase
